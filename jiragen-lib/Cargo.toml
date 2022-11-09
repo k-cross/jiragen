@@ -12,14 +12,14 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-csv = "^1.1"
-failure = "^0.1"
-http = "^0.2"
-lazy_static = "^1.4"
-regex = "^1.1"
-reqwest = "^0.10"
-serde = { version = "^1.0", features = ["derive"] }
-serde_json = "^1.0"
+csv = "1.1"
+failure = "0.1"
+http = "0.2"
+lazy_static = "1.4"
+regex = "1.1"
+reqwest = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [lib]
 name = "jiragen"

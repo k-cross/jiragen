@@ -4,9 +4,8 @@ use jiragen::{csv_to_json, CustomError, Error, JiraClient, JiraIssue};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
-/// Processes the `push` Subcommand.
-/// Parses the issues template file and creates corresponding issues in JIRA.
-pub fn parse_push(config_path: &PathBuf, issues_path: &PathBuf) -> Result<(), Error> {
+/// Creates issues from a template file in JIRA.
+pub fn create_tickets(config_path: PathBuf, issues_path: PathBuf) -> Result<(), Error> {
     let jira = JiraClient::new(read_config_file(config_path));
     let mut csv_reader = Reader::from_path(&issues_path).unwrap();
     let ids_record = csv_reader.headers()?.clone();

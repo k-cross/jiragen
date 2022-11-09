@@ -126,27 +126,27 @@ mod init;
 mod push;
 
 use clap::{Parser, Subcommand};
-use init::parse_init;
-use push::parse_push;
+use init::create_file_templates;
+use push::create_tickets;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[clap(
+#[command(
   name = "JiraGen",
   about = "A CLI tool to generate JIRA issues and place them on a board.",
   version,
   long_about = None,
 )]
 struct CliArgs {
-    /// Returns the --config argument options
-    #[clap(short, long, default_value_t = "./jiragen.json")]
+    /// Sets the path to the config file
+    #[arg(short, long, default_value_os_t = default_conf())]
     config: PathBuf,
 
-    /// Returns the --issues argument options
-    #[clap(short, long, default_value_t = "./issues.csv")]
+    /// Sets the path to the issues file, represented as a CSV
+    #[clap(short, long, default_value_os_t = default_issues())]
     issues: PathBuf,
 
-    /// Set of commands in which to operate on.
+    /// Choose which command to perform
     #[command(subcommand)]
     command: CmdProgs,
 }
@@ -161,17 +161,14 @@ fn main() {
     let cli_args = CliArgs::parse();
 
     match cli_args.command {
-        CmdProgs::Init => {
-            match parse_init(cli_args.config, cli_args.issues) {
-                Ok(_) => (),
-                Err(e) => eprintln!("{}", e),
-            };
-        }
-        Push {
-            match parse_push(cli_args.config, cli_args.issues) {
-                Ok(_) => (),
-                Err(e) => eprintln!("{}", e),
-            };
-        }
-    }
+        CmdProgs::Init => create_file_templates(cli_args.config, cli_args.issues),
+        CmdProgs::Push => create_tickets(cli_args.config, cli_args.issues),
+    };
+}
+
+fn default_conf() -> PathBuf {
+    PathBuf::from("./jiragen.json")
+}
+fn default_issues() -> PathBuf {
+    PathBuf::from("./issues.csv")
 }

@@ -20,3 +20,4 @@ coverage/
 
 target
 **/*.rs.bk
+.vscode
