@@ -125,36 +125,54 @@ mod config;
 mod init;
 mod push;
 
-use clap::{crate_authors, crate_version, App, AppSettings};
-use init::{parse_init, subcommand_init};
-use push::{parse_push, subcommand_push};
+use clap::{Parser, Subcommand};
+use init::parse_init;
+use push::parse_push;
+use std::path::PathBuf;
+
+#[derive(Parser, Debug)]
+#[clap(
+  name = "JiraGen",
+  about = "A CLI tool to generate JIRA issues and place them on a board.",
+  version,
+  long_about = None,
+)]
+struct CliArgs {
+    /// Returns the --config argument options
+    #[clap(short, long, default_value_t = "./jiragen.json")]
+    config: PathBuf,
+
+    /// Returns the --issues argument options
+    #[clap(short, long, default_value_t = "./issues.csv")]
+    issues: PathBuf,
+
+    /// Set of commands in which to operate on.
+    #[command(subcommand)]
+    command: CmdProgs,
+}
+
+#[derive(Subcommand, Debug)]
+enum CmdProgs {
+    Init,
+    Push,
+}
 
 fn main() {
-  let matches = App::new("JiraGen")
-    .about("A CLI tool to generate JIRA issues and place them on a board.")
-    .bin_name("jiragen")
-    .version(crate_version!())
-    .author(crate_authors!())
-    .setting(AppSettings::SubcommandRequiredElseHelp)
-    .setting(AppSettings::DisableHelpSubcommand)
-    .subcommand(subcommand_init())
-    .subcommand(subcommand_push())
-    .get_matches();
+    let cli_args = CliArgs::parse();
 
-  match matches.subcommand() {
-    ("init", Some(cmd)) => {
-      match parse_init(cmd) {
-        Ok(_) => (),
-        Err(e) => eprintln!("{}", e),
-      };
+    match cli_args.subcommand() {
+        ("init", Some(cmd)) => {
+            match parse_init(cmd) {
+                Ok(_) => (),
+                Err(e) => eprintln!("{}", e),
+            };
+        }
+        ("push", Some(cmd)) => {
+            match parse_push(cmd) {
+                Ok(_) => (),
+                Err(e) => eprintln!("{}", e),
+            };
+        }
+        _ => println!("Invalid command"),
     }
-    // ("generate", Some(cmd)) => parse_generate(cmd),
-    ("push", Some(cmd)) => {
-      match parse_push(cmd) {
-        Ok(_) => (),
-        Err(e) => eprintln!("{}", e),
-      };
-    }
-    _ => println!("Invalid command"),
-  }
 }
