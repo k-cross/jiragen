@@ -21,3 +21,5 @@ coverage/
 target
 **/*.rs.bk
 .vscode
+issues.csv
+jiragen.json
