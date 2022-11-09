@@ -1,20 +1,14 @@
 use crate::config::read_config_file;
-use clap::ArgMatches;
 use csv::{Reader, StringRecord};
 use jiragen::{csv_to_json, CustomError, Error, JiraClient, JiraIssue};
 use serde_json::{json, Value};
+use std::path::PathBuf;
 
 /// Processes the `push` Subcommand.
 /// Parses the issues template file and creates corresponding issues in JIRA.
-pub fn parse_push(matches: &ArgMatches) -> Result<(), Error> {
-    let config_path = matches.value_of("config").unwrap();
-    let issues_path = matches.value_of("issues").unwrap();
-
-    let config = read_config_file(config_path);
-    let jira = JiraClient::new(config);
-
+pub fn parse_push(config_path: &PathBuf, issues_path: &PathBuf) -> Result<(), Error> {
+    let jira = JiraClient::new(read_config_file(config_path));
     let mut csv_reader = Reader::from_path(&issues_path).unwrap();
-
     let ids_record = csv_reader.headers()?.clone();
     let ids: Vec<&str> = ids_record.iter().collect();
     let mut csv_records = csv_reader.into_records();

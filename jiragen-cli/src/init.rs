@@ -1,14 +1,10 @@
-use clap::ArgMatches;
 use jiragen::{Config, Error};
 use std::fs::write;
+use std::path::PathBuf;
 
 /// Processes the `init` SubCommand.
 /// Creates the config file as well as the issues template file.
-pub fn parse_init(matches: &ArgMatches) -> Result<(), Error> {
-    // write config
-    let config_path = matches.value_of("config").unwrap();
-    let issues_path = matches.value_of("issues").unwrap();
-
+pub fn parse_init(config_path: &PathBuf, issues_path: &PathBuf) -> Result<(), Error> {
     let config = Config {
         jira_url: "".to_string(),
         jira_user: "".to_string(),

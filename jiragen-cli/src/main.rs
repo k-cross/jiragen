@@ -160,19 +160,18 @@ enum CmdProgs {
 fn main() {
     let cli_args = CliArgs::parse();
 
-    match cli_args.subcommand() {
-        ("init", Some(cmd)) => {
-            match parse_init(cmd) {
+    match cli_args.command {
+        CmdProgs::Init => {
+            match parse_init(cli_args.config, cli_args.issues) {
                 Ok(_) => (),
                 Err(e) => eprintln!("{}", e),
             };
         }
-        ("push", Some(cmd)) => {
-            match parse_push(cmd) {
+        Push {
+            match parse_push(cli_args.config, cli_args.issues) {
                 Ok(_) => (),
                 Err(e) => eprintln!("{}", e),
             };
         }
-        _ => println!("Invalid command"),
     }
 }
