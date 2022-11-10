@@ -1,12 +1,12 @@
-use crate::config::read_config_file;
 use csv::{Reader, StringRecord};
-use jiragen::{csv_to_json, CustomError, Error, JiraClient, JiraIssue};
+use jiragen::{csv_to_json, Config, CustomError, Error, JiraClient, JiraIssue};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
 /// Creates issues from a template file in JIRA.
-pub fn create_tickets(config_path: PathBuf, issues_path: PathBuf) -> Result<(), Error> {
-    let jira = JiraClient::new(read_config_file(config_path));
+pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
+    dbg!("started");
+    let jira = JiraClient::new(conf);
     let mut csv_reader = Reader::from_path(&issues_path).unwrap();
     let ids_record = csv_reader.headers()?.clone();
     let ids: Vec<&str> = ids_record.iter().collect();
@@ -32,6 +32,8 @@ pub fn create_tickets(config_path: PathBuf, issues_path: PathBuf) -> Result<(), 
         })
         .collect();
 
+    dbg!(&issues_to_create);
+
     let bulk_issue_create_request = jira.init_request("POST", "/rest/api/2/issue/bulk");
     let request_json = json!({ "issueUpdates": issues_to_create });
 
@@ -39,6 +41,8 @@ pub fn create_tickets(config_path: PathBuf, issues_path: PathBuf) -> Result<(), 
         .body(request_json.to_string())
         .send()?;
     let response_json: Value = response.json()?;
+    dbg!("response time");
+    dbg!(&response);
 
     if !&response.status().is_success() {
         return Err(Error::CustomError(CustomError {

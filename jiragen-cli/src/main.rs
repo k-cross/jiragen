@@ -1,9 +1,5 @@
 //! The command line tool to send bulk issue creation requests to JIRA from a .csv file.
 //!
-//! ## Installation
-//!
-//! Download the binary (located in the releases section of the GitHub repo) and run it on the command line. Alternatively if you already have Rust installed, you can run `cargo install jiragen-cli`.
-//!
 //! ## Usage
 //!
 //! ```bash
@@ -33,14 +29,7 @@
 //! Creates the JiraGen config file.
 //!
 //! ```bash
-//! jiragen init
-//! #=> creates jiragen.json
-//!
-//! jiragen init --config ./config/my-custom-jiragen-config.json
-//! #=> creates "./config/my-custom-jiragen-config.json"
-//!
-//! jiragen init --config ./config/my-custom-jiragen-config.json  --issues ./config/my-issues-template.csv
-//! #=> creates "./config/my-custom-jiragen-config.json" and "./config/my-issues-template.csv"
+//! jiragen init --issues <path/to/issues.csv>
 //! ```
 //!
 //! ### Command: `jiragen push`
@@ -49,32 +38,18 @@
 //!
 //! ```bash
 //! jiragen push
-//! #=> reads jiragen-issues.csv in the current folder and pushes issues to JIRA
+//! #=> reads issues.csv in the current folder and pushes issues to JIRA
 //!
-//! jiragen push --config ./config/my-custom-jiragen-config.json --issues ./config/my-issues-template.csv
+//! jiragen push --issues ./config/my-issues-template.csv
 //! #=> reads the files located at "./config/my-custom-jiragen-config.json" and "./config/my-issues-template.csv" //! and pushes issues to JIRA
 //! ```
 //!
 //! ### Command Options
 //!
-//! **`--config`** (default: `"./jiragen.json"`)
-//! A custom path where the config file is created.
-//!
 //! **`--issues`** (default: `"./jiragen-issues.csv"`)
 //! A custom path where the issues template CSV file is created.
 //!
 //! ## Configuration
-//!
-//! Configuration is stored in a `.json` file (default `./jiragen.json`) and has the following properties:
-//!
-//! **`jira_url`** (string)
-//! The URL of the Jira instance.
-//!
-//! **`jira_user`** (string)
-//! The JIRA user to login as.
-//!
-//! **`jira_password`** (string)
-//! The JIRA user’s password. (The tool uses Basic Auth).
 //!
 //! ## .csv syntax
 //!
@@ -121,13 +96,14 @@
 //! # { "fixVersions": [ {"id": "10000"}, {"id": "10001"} ] }
 //! ```
 
-mod config;
 mod init;
 mod push;
 
 use clap::{Parser, Subcommand};
 use init::create_file_templates;
+use jiragen::Config;
 use push::create_tickets;
+use std::env;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -138,9 +114,17 @@ use std::path::PathBuf;
   long_about = None,
 )]
 struct CliArgs {
-    /// Sets the path to the config file
-    #[arg(short, long, default_value_os_t = default_conf())]
-    config: PathBuf,
+    /// Sets the `username` in JIRA
+    #[arg(short, long, default_value_t = default_env("JIRA_USERNAME"))]
+    user: String,
+
+    /// Sets the `domain` link used to query JIRA
+    #[arg(short, long, default_value_t = default_env("JIRA_DOMAIN"))]
+    domain: String,
+
+    /// Sets the `API Key` used to authenticate the JIRA User
+    #[arg(short, long, default_value_t = default_env("JIRA_KEY"))]
+    key: String,
 
     /// Sets the path to the issues file, represented as a CSV
     #[clap(short, long, default_value_os_t = default_issues())]
@@ -159,16 +143,30 @@ enum CmdProgs {
 
 fn main() {
     let cli_args = CliArgs::parse();
-
-    match cli_args.command {
-        CmdProgs::Init => create_file_templates(cli_args.config, cli_args.issues),
-        CmdProgs::Push => create_tickets(cli_args.config, cli_args.issues),
+    let conf = Config {
+        jira_url: cli_args.domain,
+        jira_user: cli_args.user,
+        jira_key: cli_args.key,
     };
+
+    let res = match cli_args.command {
+        CmdProgs::Init => create_file_templates(cli_args.issues),
+        CmdProgs::Push => create_tickets(conf, cli_args.issues),
+    };
+
+    match res {
+        Ok(_) => (),
+        Err(e) => println!("{:#?}", e),
+    }
 }
 
-fn default_conf() -> PathBuf {
-    PathBuf::from("./jiragen.json")
-}
 fn default_issues() -> PathBuf {
     PathBuf::from("./issues.csv")
+}
+
+fn default_env(v: &str) -> String {
+    match env::var_os(v) {
+        Some(o_str) => o_str.into_string().unwrap(),
+        None => String::new(),
+    }
 }
