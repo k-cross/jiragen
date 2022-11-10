@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-/// JiraGen configuration that is used for sending requests to JIRA. The username and API key fields are required because JiraGen uses Basic Authentication to send requests to JIRA.
+/// JiraGen configuration that is used for sending requests to JIRA. The username and API key
+/// fields are required because JiraGen uses Basic Authentication to send requests to JIRA.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     /// The URL of the JIRA server.

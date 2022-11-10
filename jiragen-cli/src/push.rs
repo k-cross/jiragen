@@ -34,14 +34,14 @@ pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
 
     dbg!(&issues_to_create);
 
-    let bulk_issue_create_request = jira.init_request("POST", "/rest/api/2/issue/bulk");
+    let bulk_issue_create_request = jira.init_request("/rest/api/2/issue/bulk");
     let request_json = json!({ "issueUpdates": issues_to_create });
     dbg!(&request_json);
 
-    let mut response = bulk_issue_create_request.json(request_json).send().await?;
+    let response = bulk_issue_create_request
+        .body(request_json.to_string())
+        .send()?;
 
-    let response_json: Value = response.json()?;
-    dbg!("response time");
     dbg!(&response);
 
     if !&response.status().is_success() {
@@ -50,13 +50,13 @@ pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
                 "JIRA responded with status {}:",
                 &response.status().as_str()
             ),
-            details: serde_json::to_string_pretty(&response_json)?,
+            details: response.text()?,
         }));
     }
 
     println!(
         "Issues created successfully. Response:\n\n{}",
-        serde_json::to_string_pretty(&response_json)?
+        response.text()?
     );
 
     Ok(())
