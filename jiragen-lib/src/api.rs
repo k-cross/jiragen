@@ -34,16 +34,6 @@ impl JiraClient {
         Self { client, config }
     }
 
-    /// Returns a reference to the [`Reqwest`](https://docs.rs/reqwest/) `Client` with preconfigured headers.
-    pub fn get_client(&self) -> &Client {
-        &self.client
-    }
-
-    /// Returns a reference to the JIRA [`Config`](struct.Config.html) object.
-    pub fn get_config(&self) -> &Config {
-        &self.config
-    }
-
     /// Creates a reqwest Request Builder with some predefined authorization headers.
     /// ```
     /// use jiragen::{Config, JiraClient};
@@ -68,7 +58,7 @@ impl JiraClient {
 
         let url = format!("{}{}", self.config.jira_url, endpoint);
         self.client
-            .request(Method::from_bytes(method).unwrap(), &url)
+            .post(&url)
             .basic_auth(&self.config.jira_user, Some(&self.config.jira_key))
     }
 }

@@ -36,10 +36,10 @@ pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
 
     let bulk_issue_create_request = jira.init_request("POST", "/rest/api/2/issue/bulk");
     let request_json = json!({ "issueUpdates": issues_to_create });
+    dbg!(&request_json);
 
-    let mut response = bulk_issue_create_request
-        .body(request_json.to_string())
-        .send()?;
+    let mut response = bulk_issue_create_request.json(request_json).send().await?;
+
     let response_json: Value = response.json()?;
     dbg!("response time");
     dbg!(&response);
