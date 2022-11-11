@@ -1,12 +1,11 @@
 use csv::{Reader, StringRecord};
 use jiragen::{csv_to_json, Config, CustomError, Error, JiraClient, JiraIssue};
-use serde_json::{json, Value};
+use serde_json::json;
 use std::path::PathBuf;
 
 /// Creates issues from a template file in JIRA.
 pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
-    dbg!("started");
-    let jira = JiraClient::new(conf);
+    let jira = JiraClient::new();
     let mut csv_reader = Reader::from_path(&issues_path).unwrap();
     let ids_record = csv_reader.headers()?.clone();
     let ids: Vec<&str> = ids_record.iter().collect();
@@ -34,13 +33,20 @@ pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
 
     dbg!(&issues_to_create);
 
-    let bulk_issue_create_request = jira.init_request("/rest/api/2/issue/bulk");
     let request_json = json!({ "issueUpdates": issues_to_create });
     dbg!(&request_json);
+    let url = format!("{}/rest/api/2/issue/bulk", &conf.jira_url);
+    dbg!(&conf);
+    let req = jira
+        .client
+        .post(&url)
+        .json(&request_json)
+        .basic_auth(&conf.jira_user, Some(&conf.jira_key))
+        .build()?;
+    //let req = jira.bulk_issue_request(request_json).build()?;
+    dbg!(&req);
 
-    let response = bulk_issue_create_request
-        .body(request_json.to_string())
-        .send()?;
+    let response = jira.client.execute(req)?;
 
     dbg!(&response);
 

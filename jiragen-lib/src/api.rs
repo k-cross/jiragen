@@ -10,29 +10,32 @@ use std::collections::HashMap;
 /// `JiraClient::new(`[`Config`](struct.Config.html)`)`, and then that instance can then be used
 /// for creating requests to JIRA, via `.init_request()` (which creates authorization headers using
 /// the `Config` username/key).
+#[derive(Debug)]
 pub struct JiraClient {
-    client: Client,
-    config: Config,
+    pub client: Client,
+    //config: Config,
 }
 
 impl JiraClient {
     /// Creates a new `reqwest` client and returns the `JiraClient` struct wrapper.
-    pub fn new(config: Config) -> Self {
+    //pub fn new(config: Config) -> Self {
+    pub fn new() -> Self {
         let mut headers = HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse().unwrap());
 
         let client = Client::builder().default_headers(headers).build().unwrap();
 
-        Self { client, config }
+        Self { client }
     }
 
-    /// Creates a reqwest Request Builder with some predefined authorization headers.
-    pub fn init_request(&self, endpoint: &str) -> RequestBuilder {
-        let url = format!("{}{}", self.config.jira_url, endpoint);
-        self.client
-            .post(&url)
-            .basic_auth(&self.config.jira_user, Some(&self.config.jira_key))
-    }
+    // /// Creates a reqwest Request Builder with some predefined authorization headers.
+    // pub fn bulk_issue_request(&self, payload: Value) -> RequestBuilder {
+    //     let url = format!("{}/rest/api/2/issue/bulk", self.config.jira_url);
+    //     self.client
+    //         .post(&url)
+    //         .json(&payload)
+    //         .basic_auth(&self.config.jira_user, Some(&self.config.jira_key))
+    // }
 }
 
 #[derive(Debug, Serialize)]
