@@ -31,24 +31,16 @@ pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
         })
         .collect();
 
-    dbg!(&issues_to_create);
-
     let request_json = json!({ "issueUpdates": issues_to_create });
-    dbg!(&request_json);
     let url = format!("{}/rest/api/2/issue/bulk", &conf.jira_url);
-    dbg!(&conf);
     let req = jira
         .client
         .post(&url)
         .json(&request_json)
         .basic_auth(&conf.jira_user, Some(&conf.jira_key))
         .build()?;
-    //let req = jira.bulk_issue_request(request_json).build()?;
-    dbg!(&req);
 
     let response = jira.client.execute(req)?;
-
-    dbg!(&response);
 
     if !&response.status().is_success() {
         return Err(Error::CustomError(CustomError {

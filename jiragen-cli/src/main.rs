@@ -96,10 +96,12 @@
 //! # { "fixVersions": [ {"id": "10000"}, {"id": "10001"} ] }
 //! ```
 
+mod info;
 mod init;
 mod push;
 
 use clap::{Parser, Subcommand};
+use info::get;
 use init::create_file_templates;
 use jiragen::Config;
 use push::create_tickets;
@@ -139,6 +141,11 @@ struct CliArgs {
 enum CmdProgs {
     Init,
     Push,
+    Info {
+        /// Project key to query JIRA about project, ex: JRA in a ticket JRA-123
+        #[arg(short, long, default_value = "INF")]
+        project: String,
+    },
 }
 
 fn main() {
@@ -152,6 +159,7 @@ fn main() {
     let res = match cli_args.command {
         CmdProgs::Init => create_file_templates(cli_args.issues),
         CmdProgs::Push => create_tickets(conf, cli_args.issues),
+        CmdProgs::Info { project: p } => get(conf, p),
     };
 
     match res {
