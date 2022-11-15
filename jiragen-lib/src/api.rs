@@ -3,7 +3,6 @@ use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, CONTENT_TYPE};
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::HashMap;
 
 /// A `JiraClient` instance handles requests sent to JIRA. An instance is created via
 /// `JiraClient::new(`[`Config`](struct.Config.html)`)`, and then that instance can then be used
@@ -31,7 +30,7 @@ impl JiraClient {
 /// The object to send to JIRA’s "bulk issue creation" API endpoint
 pub struct JiraIssue {
     /// not implemented, set as `None`.
-    pub update: Option<HashMap<String, HashMap<String, Vec<String>>>>,
+    pub update: Option<Value>,
     /// A `serde_json` [Value](https://docs.serde.rs/serde_json/enum.Value.html).
     pub fields: Value,
 }

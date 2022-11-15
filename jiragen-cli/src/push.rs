@@ -1,10 +1,14 @@
 use csv::{Reader, StringRecord};
 use jiragen::{csv_to_json, Config, CustomError, Error, JiraClient, JiraIssue};
-use serde_json::json;
+use serde_json::{json, Value};
 use std::path::PathBuf;
 
 /// Creates issues from a template file in JIRA.
-pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
+pub fn create_tickets(
+    conf: Config,
+    issues_path: PathBuf,
+    link: Option<String>,
+) -> Result<(), Error> {
     let jira = JiraClient::new();
     let mut csv_reader = Reader::from_path(&issues_path).unwrap();
     let ids_record = csv_reader.headers()?.clone();
@@ -22,11 +26,38 @@ pub fn create_tickets(conf: Config, issues_path: PathBuf) -> Result<(), Error> {
         })
         .collect();
     let json_values = csv_to_json(ids, filtered_csv_records)?;
+    let link_data = match link {
+        None => None,
+        Some(l) => {
+            let data = format!(
+                r#"
+                {{
+                    "issuelinks":[
+                        {{
+                           "add":{{
+                              "type":{{
+                                 "name":"Relates",
+                                 "outward":"relates to",
+                                 "inward":"relates to"
+                              }},
+                              "outwardIssue":{{
+                                 "key":"{}"
+                              }}
+                           }}
+                        }}
+                    ]
+                }}"#,
+                l
+            );
+            let link_data: Value = serde_json::from_str(data.as_str())?;
+            Some(link_data)
+        }
+    };
 
     let issues_to_create: Vec<JiraIssue> = json_values
         .into_iter()
         .map(|record_json| JiraIssue {
-            update: None,
+            update: link_data.clone(),
             fields: record_json,
         })
         .collect();

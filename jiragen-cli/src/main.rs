@@ -111,21 +111,25 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(
   name = "JiraGen",
-  about = "A CLI tool to generate JIRA issues and place them on a board.",
+  about = r#"
+A CLI tool to generate JIRA issues and place them on a board. The `--key` or `-k` option is used
+for setting the JIRA API key, it is hidden to prevent displaying the environment variable
+`JIRA_KEY`.
+  "#,
   version,
   long_about = None,
 )]
 struct CliArgs {
-    /// Sets the `username` in JIRA
+    /// Sets the `username` in JIRA (defaults from `JIRA_USERNAME`)
     #[arg(short, long, default_value_t = default_env("JIRA_USERNAME"))]
     user: String,
 
-    /// Sets the `domain` link used to query JIRA
+    /// Sets the `domain` link used to query JIRA (defaults from `JIRA_DOMAIN`)
     #[arg(short, long, default_value_t = default_env("JIRA_DOMAIN"))]
     domain: String,
 
     /// Sets the `API Key` used to authenticate the JIRA User
-    #[arg(short, long, default_value_t = default_env("JIRA_KEY"))]
+    #[clap(short, long, hide = true, default_value_t = default_env("JIRA_KEY"))]
     key: String,
 
     /// Sets the path to the issues file, represented as a CSV
@@ -140,7 +144,11 @@ struct CliArgs {
 #[derive(Subcommand, Debug)]
 enum CmdProgs {
     Init,
-    Push,
+    Push {
+        /// Link all tickets in a `Relates To` relationship
+        #[arg(short, long)]
+        link: Option<String>,
+    },
     Info {
         /// Project key to query JIRA about project, ex: JRA in a ticket JRA-123
         #[arg(short, long, default_value = "INF")]
@@ -158,7 +166,7 @@ fn main() {
 
     let res = match cli_args.command {
         CmdProgs::Init => create_file_templates(cli_args.issues),
-        CmdProgs::Push => create_tickets(conf, cli_args.issues),
+        CmdProgs::Push { link: l } => create_tickets(conf, cli_args.issues, l),
         CmdProgs::Info { project: p } => get(conf, p),
     };
 
