@@ -8,7 +8,7 @@
 //! let config = Config {
 //!   jira_url: "my-jira.com".to_string(),
 //!   jira_user: "user".to_string(),
-//!   jira_password: "password".to_string(),
+//!   jira_key: "key".to_string(),
 //! };
 //! let jira = JiraClient::new(config);
 //!

@@ -75,5 +75,5 @@ The URL of the Jira instance.
 **`jira_user`** (string)
 The JIRA user to login as.
 
-**`jira_password`** (string)
-The JIRA user’s password. (The tool uses Basic Auth).
+**`jira_key`** (string)
+The JIRA user’s API key. (The tool uses Basic Auth).

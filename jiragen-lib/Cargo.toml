@@ -1,9 +1,9 @@
 [package]
 name = "jiragen"
 description = "A Rust library for sending requests to JIRA. It includes functionality for sending bulk issue creation from a .csv file."
-version = "0.9.1"
-authors = ["Kai Yao <kai.b.yao@gmail.com>"]
-edition = "2018"
+version = "0.10.0"
+authors = ["Kai Yao <kai.b.yao@gmail.com>", "Ken Cross <kenny.kor.seo@gmail.com>"]
+edition = "2021"
 
 repository = "https://github.com/Accruent/jiragen"
 categories = ["api-bindings"]
@@ -12,14 +12,13 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-csv = "^1.1"
-failure = "^0.1"
-http = "^0.2"
-lazy_static = "^1.4"
-regex = "^1.1"
-reqwest = "^0.10"
-serde = { version = "^1.0", features = ["derive"] }
-serde_json = "^1.0"
+csv = "1.1"
+failure = "0.1"
+lazy_static = "1.4"
+regex = "1.1"
+reqwest = { version = "0.10", features = ["json", "blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [lib]
 name = "jiragen"

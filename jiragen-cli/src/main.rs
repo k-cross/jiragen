@@ -1,9 +1,5 @@
 //! The command line tool to send bulk issue creation requests to JIRA from a .csv file.
 //!
-//! ## Installation
-//!
-//! Download the binary (located in the releases section of the GitHub repo) and run it on the command line. Alternatively if you already have Rust installed, you can run `cargo install jiragen-cli`.
-//!
 //! ## Usage
 //!
 //! ```bash
@@ -33,14 +29,7 @@
 //! Creates the JiraGen config file.
 //!
 //! ```bash
-//! jiragen init
-//! #=> creates jiragen.json
-//!
-//! jiragen init --config ./config/my-custom-jiragen-config.json
-//! #=> creates "./config/my-custom-jiragen-config.json"
-//!
-//! jiragen init --config ./config/my-custom-jiragen-config.json  --issues ./config/my-issues-template.csv
-//! #=> creates "./config/my-custom-jiragen-config.json" and "./config/my-issues-template.csv"
+//! jiragen init --issues <path/to/issues.csv>
 //! ```
 //!
 //! ### Command: `jiragen push`
@@ -49,32 +38,18 @@
 //!
 //! ```bash
 //! jiragen push
-//! #=> reads jiragen-issues.csv in the current folder and pushes issues to JIRA
+//! #=> reads issues.csv in the current folder and pushes issues to JIRA
 //!
-//! jiragen push --config ./config/my-custom-jiragen-config.json --issues ./config/my-issues-template.csv
+//! jiragen push --issues ./config/my-issues-template.csv
 //! #=> reads the files located at "./config/my-custom-jiragen-config.json" and "./config/my-issues-template.csv" //! and pushes issues to JIRA
 //! ```
 //!
 //! ### Command Options
 //!
-//! **`--config`** (default: `"./jiragen.json"`)
-//! A custom path where the config file is created.
-//!
 //! **`--issues`** (default: `"./jiragen-issues.csv"`)
 //! A custom path where the issues template CSV file is created.
 //!
 //! ## Configuration
-//!
-//! Configuration is stored in a `.json` file (default `./jiragen.json`) and has the following properties:
-//!
-//! **`jira_url`** (string)
-//! The URL of the Jira instance.
-//!
-//! **`jira_user`** (string)
-//! The JIRA user to login as.
-//!
-//! **`jira_password`** (string)
-//! The JIRA user’s password. (The tool uses Basic Auth).
 //!
 //! ## .csv syntax
 //!
@@ -121,40 +96,85 @@
 //! # { "fixVersions": [ {"id": "10000"}, {"id": "10001"} ] }
 //! ```
 
-mod config;
+mod info;
 mod init;
 mod push;
 
-use clap::{crate_authors, crate_version, App, AppSettings};
-use init::{parse_init, subcommand_init};
-use push::{parse_push, subcommand_push};
+use clap::{Parser, Subcommand};
+use info::get;
+use init::create_file_templates;
+use jiragen::Config;
+use push::create_tickets;
+use std::env;
+use std::path::PathBuf;
+
+#[derive(Parser, Debug)]
+#[command(
+  name = "JiraGen",
+  about = "A CLI tool to generate JIRA issues and place them on a board.",
+  version,
+  long_about = None,
+)]
+struct CliArgs {
+    /// Sets the `username` in JIRA
+    #[arg(short, long, default_value_t = default_env("JIRA_USERNAME"))]
+    user: String,
+
+    /// Sets the `domain` link used to query JIRA
+    #[arg(short, long, default_value_t = default_env("JIRA_DOMAIN"))]
+    domain: String,
+
+    /// Sets the `API Key` used to authenticate the JIRA User
+    #[arg(short, long, default_value_t = default_env("JIRA_KEY"))]
+    key: String,
+
+    /// Sets the path to the issues file, represented as a CSV
+    #[clap(short, long, default_value_os_t = default_issues())]
+    issues: PathBuf,
+
+    /// Choose which command to perform
+    #[command(subcommand)]
+    command: CmdProgs,
+}
+
+#[derive(Subcommand, Debug)]
+enum CmdProgs {
+    Init,
+    Push,
+    Info {
+        /// Project key to query JIRA about project, ex: JRA in a ticket JRA-123
+        #[arg(short, long, default_value = "INF")]
+        project: String,
+    },
+}
 
 fn main() {
-  let matches = App::new("JiraGen")
-    .about("A CLI tool to generate JIRA issues and place them on a board.")
-    .bin_name("jiragen")
-    .version(crate_version!())
-    .author(crate_authors!())
-    .setting(AppSettings::SubcommandRequiredElseHelp)
-    .setting(AppSettings::DisableHelpSubcommand)
-    .subcommand(subcommand_init())
-    .subcommand(subcommand_push())
-    .get_matches();
+    let cli_args = CliArgs::parse();
+    let conf = Config {
+        jira_url: cli_args.domain,
+        jira_user: cli_args.user,
+        jira_key: cli_args.key,
+    };
 
-  match matches.subcommand() {
-    ("init", Some(cmd)) => {
-      match parse_init(cmd) {
+    let res = match cli_args.command {
+        CmdProgs::Init => create_file_templates(cli_args.issues),
+        CmdProgs::Push => create_tickets(conf, cli_args.issues),
+        CmdProgs::Info { project: p } => get(conf, p),
+    };
+
+    match res {
         Ok(_) => (),
-        Err(e) => eprintln!("{}", e),
-      };
+        Err(e) => println!("{:#?}", e),
     }
-    // ("generate", Some(cmd)) => parse_generate(cmd),
-    ("push", Some(cmd)) => {
-      match parse_push(cmd) {
-        Ok(_) => (),
-        Err(e) => eprintln!("{}", e),
-      };
+}
+
+fn default_issues() -> PathBuf {
+    PathBuf::from("./issues.csv")
+}
+
+fn default_env(v: &str) -> String {
+    match env::var_os(v) {
+        Some(o_str) => o_str.into_string().unwrap(),
+        None => String::new(),
     }
-    _ => println!("Invalid command"),
-  }
 }
