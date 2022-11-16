@@ -6,6 +6,21 @@ A library and CLI tool to generate JIRA issues. This makes it easy to create iss
 
 [Library Docs](https://docs.rs/jiragen)
 
+## Quickstart
+
+The CLI tool works by setting three environment variables (`JIRA_DOMAIN=https://example.jira.com`, `JIRA_USERNAME=person.with.face@corp.net`, `JIRA_KEY=supersecretjiraapikey`).
+The `JIRA_KEY` is created by logging into the JIRA instance in question as a user and creating it.
+There are no binaries available but it was last built with Rust 1.65, it should work from Rust 1.56 since it requires `2021 edition`.
+
+* To create the initial `issue.csv` type `jiragen init`.
+* To create tickets type `jiragen push`
+    * Linking can be done like `jiragen push -l JRA-123`
+* Info for your project can be found via an API dump using `jiragen info -p <PROJECT ID>`
+
+## Future
+
+I hope to make this a little friendlier in the future by auto-generating some of the requiered fields, add more link types, and make the info dump more human readible an friendly for consumption.
+
 ## The Issues Template file
 
 JiraGen reads a .csv file that represents the issues (and their field values) to be created in JIRA (using the `push` command).
