@@ -1,3 +1,6 @@
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::{ContentArrangement, Table};
 use jiragen::{Config, CustomError, Error, JiraClient};
 use serde_json::Value;
 
@@ -27,4 +30,16 @@ pub fn get(conf: Config, project: String) -> Result<(), jiragen::Error> {
     println!("Info from project:\n\n{:#?}", v);
 
     Ok(())
+}
+
+fn create_project_table(data: Value) -> Table {
+    let mut table = Table::new();
+
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_header(vec!["Components", "Issue Type", "Roles"]);
+
+    table
 }
