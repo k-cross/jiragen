@@ -8,7 +8,9 @@ Download the binary (located in the releases section of the GitHub repo) and run
 
 ## Usage
 
-```bash
+TODO: update this
+
+```sh
 A CLI tool to generate JIRA issues and place them on a board.
 
 USAGE:
@@ -34,46 +36,40 @@ SUBCOMMANDS:
 
 Creates the JiraGen config file.
 
-```bash
+```sh
 jiragen init
-#=> creates jiragen.json
+#=> creates ./issues.csv
 
-jiragen init --config ./config/my-custom-jiragen-config.json
-#=> creates "./config/my-custom-jiragen-config.json"
-
-jiragen init --config ./config/my-custom-jiragen-config.json  --issues ./config/my-issues-template.csv
-#=> creates "./config/my-custom-jiragen-config.json" and "./config/my-issues-template.csv"
+jiragen --issues ./config/my-issues-template.csv init
+#=> creates ./config/my-issues-template.csv
 ```
 
 ### Command: `jiragen push`
 
 Takes the content from the issues template file and creates the issues in the JIRA project.
 
-```bash
+```sh
 jiragen push
-#=> reads jiragen-issues.csv in the current folder and pushes issues to JIRA
+#=> reads issues.csv in the current folder and pushes issues to JIRA
 
-jiragen push --config ./config/my-custom-jiragen-config.json --issues ./config/my-issues-template.csv
-#=> reads the files located at "./config/my-custom-jiragen-config.json" and "./config/my-issues-template.csv" and pushes issues to JIRA
+jiragen --issues ./config/my-issues-template.csv push
+#=> reads the file located at `./config/my-issues-template.csv` and pushes issues to JIRA
 ```
 
 ### Command Options
-
-**`--config`** (default: `"./jiragen.json"`)
-A custom path where the config file is created.
 
 **`--issues`** (default: `"./jiragen-issues.csv"`)
 A custom path where the issues template CSV file is created.
 
 ## Configuration
 
-Configuration is stored in a `.json` file (default `./jiragen.json`) and has the following properties:
+Configuration is stored in three environment variables:
 
-**`jira_url`** (string)
+**`JIRA_DOMAIN`** (string)
 The URL of the Jira instance.
 
-**`jira_user`** (string)
+**`JIRA_USERNAME`** (string)
 The JIRA user to login as.
 
-**`jira_key`** (string)
+**`JIRA_KEY`** (string)
 The JIRA user’s API key. (The tool uses Basic Auth).
