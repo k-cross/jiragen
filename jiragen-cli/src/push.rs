@@ -1,3 +1,6 @@
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::{ContentArrangement, Table};
 use csv::{Reader, StringRecord};
 use jiragen::{csv_to_json, Config, CustomError, Error, JiraClient, JiraIssue};
 use serde_json::{json, Value};
@@ -83,10 +86,40 @@ pub fn create_tickets(
         }));
     }
 
-    println!(
-        "Issues created successfully. Response:\n\n{}",
-        response.text()?
-    );
+    let push_data: Value = serde_json::from_str(response.text()?.as_str())?;
+    let table = create_table(push_data);
+
+    println!("Issues created successfully:\n\n{}", table);
 
     Ok(())
+}
+
+fn create_table(data: Value) -> Table {
+    let mut table = Table::new();
+
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_header(vec!["Issues"]);
+
+    let issues_col: Vec<_> = data["issues"]
+        .as_array()
+        .unwrap()
+        .into_iter()
+        .map(|iss| {
+            format!(
+                "ID: {}\nKey: {}\nLink: {}",
+                iss["id"].as_str().unwrap(),
+                iss["key"].as_str().unwrap(),
+                iss["self"].as_str().unwrap(),
+            )
+        })
+        .collect();
+
+    for i in issues_col {
+        table.add_row(vec![i]);
+    }
+
+    table
 }
